@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>在线作业管理系统</title>
+  <style>
+    :root{
+      --bg:#f3f6f4;
+      --panel:#ffffff;
+      --panel-2:#f8faf9;
+      --line:#dce5dd;
+      --text:#17211b;
+      --muted:#607069;
+      --accent:#2f6b4f;
+      --accent-2:#d97a25;
+      --good:#1d7043;
+      --warn:#9c5a00;
+      --bad:#a43b2b;
+      --shadow:0 10px 24px rgba(23,33,27,.08);
+      --radius:8px;
+      --sidebar:270px;
+      --topbar:64px;
+      font-synthesis-weight:none;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+      background:linear-gradient(180deg,#edf2ee 0%,#f5f7f4 20%,#f3f6f4 100%);
+      color:var(--text);
+    }
+    button,input,textarea,select{font:inherit}
+    button{
+      border:0;
+      background:none;
+      color:inherit;
+      cursor:pointer;
+    }
+    .hidden{display:none !important}
+    .icon{width:16px;height:16px;display:inline-block;flex:none}
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      line-height:1;
+      white-space:nowrap;
+    }
+    .tag.todo{background:#fff6df;color:var(--warn)}
+    .tag.submitted{background:#eaf3ff;color:#245b9a}
+    .tag.graded{background:#e7f5ea;color:var(--good)}
+    .tag.overdue{background:#fdeceb;color:var(--bad)}
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border-radius:8px;
+      padding:10px 14px;
+      font-weight:600;
+      border:1px solid transparent;
+    }
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.secondary{background:#fff;border-color:var(--line);color:#27312c}
+    .btn.ghost{background:#f5f8f5;border-color:#dfe7e0;color:var(--accent)}
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field label{font-size:12px;color:var(--muted)}
+    .field input,.field textarea,.field select,.controls input,.controls select{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:8px;
+      padding:9px 11px;
+      color:#24302a;
+    }
+    .field textarea{min-height:110px;resize:vertical}
+
+    .login{
+      min-height:100vh;
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) 400px;
+      gap:18px;
+      padding:18px;
+      align-items:center;
+    }
+    .login-hero,.login-card,.section,.panel,.stat,.sample{
+      box-shadow:var(--shadow);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:var(--panel);
+    }
+    .login-hero{
+      min-height:calc(100vh - 36px);
+      padding:24px;
+      background:
+        linear-gradient(180deg,rgba(255,255,255,.84),rgba(255,255,255,.94)),
+        radial-gradient(circle at top right, rgba(47,107,79,.12), transparent 34%),
+        linear-gradient(135deg,#eff4ef 0%,#e7f0e9 100%);
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);
+      gap:14px;
+      align-items:stretch;
+    }
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:0;
+    }
+    .brand-mark{
+      width:40px;height:40px;border-radius:8px;
+      display:grid;place-items:center;
+      background:linear-gradient(145deg,#2f6b4f,#214e39);
+      color:#fff;
+      box-shadow:var(--shadow);
+      flex:none;
+    }
+    .brand h1{margin:0;font-size:30px;line-height:1.2}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
+    .login-hero > .hero-grid > div:first-child > p{
+      margin:10px 0 0;
+      color:var(--muted);
+      line-height:1.7;
+      max-width:760px;
+    }
+    .feature-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+    .feature{
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:rgba(255,255,255,.92);
+      padding:14px;
+    }
+    .feature span{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    .feature strong{display:block;font-size:14px;line-height:1.5}
+    .login-promo{
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:rgba(255,255,255,.92);
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .login-promo .hint{font-size:12px;color:var(--muted);line-height:1.6}
+    .login-card{
+      padding:22px;
+      width:100%;
+      justify-self:end;
+    }
+    .login-card h2{margin:0 0 8px;font-size:18px}
+    .login-card p{margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.6}
+    .login-form{display:flex;flex-direction:column;gap:12px}
+    .login-form .field input{width:100%}
+
+    .app{
+      min-height:100vh;
+      display:grid;
+      grid-template-columns:var(--sidebar) 1fr;
+    }
+    .sidebar{
+      background:rgba(255,255,255,.84);
+      border-right:1px solid var(--line);
+      padding:18px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      backdrop-filter:blur(10px);
+    }
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .nav button{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      padding:11px 12px;
+      border-radius:8px;
+      text-align:left;
+      color:#26302b;
+    }
+    .nav button[aria-selected="true"]{
+      background:#e9f2ec;
+      color:var(--accent);
+      font-weight:600;
+    }
+    .nav button:hover{background:#f3f5f3}
+    .sidebar-card{
+      margin-top:auto;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:#fff;
+      padding:12px;
+      box-shadow:var(--shadow);
+    }
+    .sidebar-card .label{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .sidebar-card .value{font-size:13px;line-height:1.5}
+
+    .main{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar{
+      min-height:var(--topbar);
+      padding:12px 18px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.76);
+      backdrop-filter:blur(10px);
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search{
+      flex:1;
+      max-width:520px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 14px;
+      min-width:0;
+    }
+    .search input{
+      width:100%;
+      border:0;
+      outline:none;
+      background:transparent;
+      min-width:0;
+    }
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex:none;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:13px;
+      color:#25302b;
+    }
+    .content{
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      min-width:0;
+    }
+    .section{
+      overflow:hidden;
+    }
+    .section-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background:var(--panel-2);
+    }
+    .section-head h2,.section-head h3{margin:0;font-size:15px}
+    .section-body{padding:16px}
+    .tabs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding:0 18px 18px;
+    }
+    .tabs button{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:999px;
+      padding:9px 12px;
+      color:#28322c;
+    }
+    .tabs button.active{
+      background:#e8f2eb;
+      border-color:#cfe0d4;
+      color:var(--accent);
+      font-weight:600;
+    }
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+    }
+    .stat{
+      padding:14px;
+      min-width:0;
+    }
+    .stat .k{font-size:12px;color:var(--muted);margin-bottom:10px}
+    .stat .v{font-size:28px;line-height:1;font-weight:700}
+    .stat .s{font-size:12px;color:var(--muted);margin-top:10px}
+    .grid-2{
+      display:grid;
+      grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);
+      gap:16px;
+      align-items:start;
+    }
+    .panel{
+      overflow:hidden;
+    }
+    .panel-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      background:var(--panel-2);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .panel-head h3{margin:0;font-size:14px}
+    .panel-body{padding:14px}
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .controls button,.controls select,.controls input{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:8px;
+      padding:9px 11px;
+      color:#24302a;
+    }
+    .controls button.active{background:#e8f2eb;border-color:#cfe0d4;color:var(--accent);font-weight:600}
+    .controls input{min-width:180px}
+    table{width:100%;border-collapse:collapse}
+    th,td{
+      border-bottom:1px solid var(--line);
+      padding:12px 14px;
+      font-size:14px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{
+      font-size:12px;
+      color:var(--muted);
+      background:#fcfdfc;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    tbody tr{cursor:pointer}
+    tbody tr:hover{background:#fafcf9}
+    tbody tr.selected{background:#eef7f1}
+    .meta{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .meta div{
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:#fafcfa;
+      padding:10px 12px;
+      min-width:0;
+    }
+    .meta span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+    .meta strong{font-size:14px}
+    .desc{
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:#fafcfa;
+      padding:12px;
+      white-space:pre-wrap;
+      line-height:1.6;
+      color:#2a352f;
+    }
+    .stack{display:flex;flex-direction:column;gap:12px}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .list-item{
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:#fff;
+      padding:12px;
+    }
+    .list-item .row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .list-item strong{font-size:14px}
+    .list-item p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+    .empty{
+      border:1px dashed var(--line);
+      border-radius:8px;
+      background:#fcfdfc;
+      color:var(--muted);
+      padding:18px;
+      text-align:center;
+    }
+    .toast{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      max-width:min(360px,calc(100vw - 36px));
+      padding:12px 14px;
+      border-radius:8px;
+      background:#1e2823;
+      color:#fff;
+      box-shadow:var(--shadow);
+      opacity:0;
+      transform:translateY(8px);
+      pointer-events:none;
+      transition:.2s ease;
+    }
+    .toast.show{opacity:1;transform:translateY(0)}
+
+    @media (max-width: 1180px){
+      .grid-2,.login{grid-template-columns:1fr}
+      .login-hero{min-height:auto}
+      .login-card{justify-self:stretch;max-width:none}
+    }
+    @media (max-width: 940px){
+      .app{grid-template-columns:1fr}
+      .sidebar{
+        border-right:0;
+        border-bottom:1px solid var(--line);
+      }
+      .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .topbar{flex-wrap:wrap}
+      .search{order:3;max-width:none;flex-basis:100%}
+    }
+    @media (max-width: 640px){
+      .content{padding:14px}
+      .stats{grid-template-columns:1fr}
+      .login{padding:14px}
+      .hero-grid{grid-template-columns:1fr}
+      .feature-grid{grid-template-columns:1fr}
+      table,thead,tbody,tr,th,td{display:block}
+      thead{display:none}
+      tbody tr{border-bottom:1px solid var(--line)}
+      tbody td{border:0;padding:8px 14px}
+      tbody td::before{
+        content:attr(data-label);
+        display:block;
+        color:var(--muted);
+        font-size:12px;
+        margin-bottom:4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginView" class="login">
+    <section class="login-hero">
+      <div class="hero-grid">
+        <div>
+          <div class="brand" style="margin-bottom:18px">
+            <div class="brand-mark" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 6h16v12H4z"></path>
+                <path d="M7 10h10M7 14h6"></path>
+              </svg>
+            </div>
+            <div>
+              <h1>在线作业管理系统</h1>
+              <p>作业流转、批改、通知和用户管理都在同一入口完成。</p>
+            </div>
+          </div>
+          <p>这是一个可本地运行的完整版本，前端直接调用后端 API，数据保存在 SQLite 中，附件会落到项目目录。登录后会根据角色切换到对应工作台。</p>
+          <div class="feature-grid">
+            <div class="feature"><span>登录方式</span><strong>统一入口，按角色自动切换界面</strong></div>
+            <div class="feature"><span>数据存储</span><strong>SQLite 持久化，重启后仍保留数据</strong></div>
+            <div class="feature"><span>附件支持</span><strong>可直接上传与下载作业附件</strong></div>
+            <div class="feature"><span>默认流程</span><strong>作业、提交、批改、通知一屏可达</strong></div>
+          </div>
+        </div>
+        <div class="login-promo">
+          <div>
+            <span class="hint">本地运行提示</span>
+            <div style="font-size:14px;font-weight:600;line-height:1.6;margin-top:6px">启动服务后直接访问 http://localhost:3000，用自己的账号登录即可。</div>
+          </div>
+          <div class="hint">如果你想把它做成课堂演示页，我也可以继续把首屏做得更像一个产品入口，而不是简单登录框。</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="login-card">
+      <h2>登录</h2>
+      <p>请输入你的账号信息进入系统。</p>
+      <form id="loginForm" class="login-form">
+        <div class="field">
+          <label for="username">用户名</label>
+          <input id="username" name="username" autocomplete="off" placeholder="请输入用户名" />
+        </div>
+        <div class="field">
+          <label for="password">密码</label>
+          <input id="password" name="password" type="password" autocomplete="new-password" placeholder="请输入密码" />
+        </div>
+        <button class="btn primary" type="submit">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17l5-5-5-5"></path><path d="M15 12H3"></path><path d="M21 3v18"></path></svg>
+          进入系统
+        </button>
+      </form>
+    </aside>
+  </div>
+
+  <div id="appView" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16v12H4z"></path>
+            <path d="M7 10h10M7 14h6"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>在线作业管理系统</h1>
+          <p id="roleHint">-</p>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-card">
+        <div class="label">当前用户</div>
+        <div class="value" id="userCard">-</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="search">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input id="searchInput" type="search" placeholder="搜索作业、课程、通知" />
+        </div>
+        <div class="top-actions">
+          <div class="chip" id="dateChip">-</div>
+          <div class="chip" id="userChip">-</div>
+          <button class="chip" id="logoutBtn" type="button">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17l5-5-5-5"></path><path d="M15 12H3"></path><path d="M21 3v18"></path></svg>
+            退出
+          </button>
+        </div>
+      </header>
+
+      <div class="tabs" id="tabs"></div>
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      user: null,
+      activeTab: "overview",
+      query: "",
+      status: "all",
+      course: "all",
+      selectedAssignmentId: null,
+      assignments: [],
+      notifications: [],
+      users: [],
+      courses: [],
+      dashboard: null,
+      submissions: [],
+      assignmentDraft: null
+    };
+
+    const els = {
+      loginView: document.getElementById("loginView"),
+      appView: document.getElementById("appView"),
+      loginForm: document.getElementById("loginForm"),
+      nav: document.getElementById("nav"),
+      tabs: document.getElementById("tabs"),
+      content: document.getElementById("content"),
+      searchInput: document.getElementById("searchInput"),
+      logoutBtn: document.getElementById("logoutBtn"),
+      dateChip: document.getElementById("dateChip"),
+      userChip: document.getElementById("userChip"),
+      userCard: document.getElementById("userCard"),
+      roleHint: document.getElementById("roleHint"),
+      toast: document.getElementById("toast")
+    };
+
+    const icons = {
+      overview: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13h6V4H4v9Zm10 7h6V4h-6v16ZM4 20h6v-5H4v5Z"></path></svg>',
+      assignments: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"></path></svg>',
+      submissions: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>',
+      users: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6M23 11h-6"></path></svg>',
+      notifications: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path><path d="M9 17a3 3 0 0 0 6 0"></path></svg>',
+      refresh: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-15.3-6.4L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 15.3 6.4L21 16"></path><path d="M16 19h5v5"></path></svg>',
+      add: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>'
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+    function fmtDate(value) {
+      if (!value) return "-";
+      return new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" }).format(new Date(value));
+    }
+    function toLocalInput(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      const offset = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+    }
+    function toast(text) {
+      els.toast.textContent = text;
+      els.toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => els.toast.classList.remove("show"), 2200);
+    }
+    async function api(path, options = {}) {
+      const res = await fetch(path, {
+        credentials: "same-origin",
+        ...options,
+        headers: options.body instanceof FormData ? (options.headers || {}) : { "Content-Type":"application/json", ...(options.headers || {}) }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "请求失败");
+      return data;
+    }
+    function visibleTabs() {
+      const items = [
+        { id:"overview", label:"总览", role:"all" },
+        { id:"assignments", label:"作业管理", role:"all" },
+        { id:"submissions", label:"批改中心", role:"admin" },
+        { id:"users", label:"用户管理", role:"admin" },
+        { id:"notifications", label:"通知中心", role:"all" }
+      ];
+      return items.filter((item) => item.role === "all" || state.user?.role === item.role);
+    }
+    function activeAssignment() {
+      if (state.assignmentDraft) return state.assignmentDraft;
+      return state.assignments.find((item) => item.id === state.selectedAssignmentId) || state.assignments[0] || null;
+    }
+    function statusClass(status) {
+      return status === "graded" ? "graded" : status === "submitted" ? "submitted" : status === "overdue" ? "overdue" : "todo";
+    }
+    function statusText(status) {
+      return { todo:"待提交", submitted:"待批改", graded:"已批改", overdue:"已逾期" }[status] || "未知";
+    }
+
+    async function loadSession() {
+      try {
+        const data = await api("/api/me");
+        state.user = data.user;
+        showApp();
+        await loadAll();
+      } catch {
+        showLogin();
+      }
+    }
+    function showLogin() {
+      els.loginView.classList.remove("hidden");
+      els.appView.classList.add("hidden");
+    }
+    function showApp() {
+      els.loginView.classList.add("hidden");
+      els.appView.classList.remove("hidden");
+      els.userChip.textContent = `${state.user.displayName} · ${state.user.role === "admin" ? "管理员" : "学生"}`;
+      els.userCard.textContent = `${state.user.displayName} / ${state.user.username}`;
+      els.roleHint.textContent = state.user.role === "admin" ? "管理员视图" : "学生视图";
+      renderNav();
+      renderTabs();
+      renderDate();
+    }
+    function renderDate() {
+      els.dateChip.textContent = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit", day:"2-digit", weekday:"short" }).format(new Date());
+    }
+    function renderNav() {
+      els.nav.innerHTML = visibleTabs().map((item) => `
+        <button class="${state.activeTab === item.id ? "active" : ""}" data-tab="${item.id}" aria-selected="${state.activeTab === item.id}">
+          ${icons[item.id]}
+          ${item.label}
+        </button>
+      `).join("");
+    }
+    function renderTabs() {
+      els.tabs.innerHTML = visibleTabs().map((item) => `<button class="${state.activeTab === item.id ? "active" : ""}" data-tab="${item.id}">${item.label}</button>`).join("");
+    }
+
+    async function loadAll() {
+      const params = new URLSearchParams({ q: state.query, status: state.status, course: state.course });
+      const [dashboard, assignments, notifications, courses] = await Promise.all([
+        api(`/api/dashboard?${params}`),
+        api(`/api/assignments?${params}`),
+        api("/api/notifications"),
+        api("/api/courses")
+      ]);
+      state.dashboard = dashboard;
+      state.assignments = assignments.items;
+      state.notifications = notifications.items;
+      state.courses = courses.items;
+      if (!state.selectedAssignmentId && state.assignments[0]) state.selectedAssignmentId = state.assignments[0].id;
+      if (state.activeTab === "submissions" && state.user.role === "admin") await loadSubmissions();
+      if (state.activeTab === "users" && state.user.role === "admin") await loadUsers();
+      render();
+    }
+    async function loadSubmissions() {
+      const item = activeAssignment();
+      if (!item || !item.id) {
+        state.submissions = [];
+        return;
+      }
+      const data = await api(`/api/assignments/${item.id}/submissions`);
+      state.submissions = data.items;
+    }
+    async function loadUsers() {
+      const data = await api("/api/users");
+      state.users = data.items;
+    }
+    function refreshDateIfNeeded() {
+      renderDate();
+    }
+
+    function render() {
+      renderNav();
+      renderTabs();
+      els.content.innerHTML = "";
+      if (state.activeTab === "overview") renderOverview();
+      else if (state.activeTab === "assignments") renderAssignments();
+      else if (state.activeTab === "submissions") renderSubmissions();
+      else if (state.activeTab === "users") renderUsers();
+      else if (state.activeTab === "notifications") renderNotifications();
+    }
+
+    function filtersMarkup() {
+      const statuses = [["all","全部"],["todo","待提交"],["submitted","待批改"],["graded","已批改"]];
+      return `
+        <div class="controls" style="margin-bottom:12px;justify-content:flex-start">
+          ${statuses.map(([value, label]) => `<button class="${state.status === value ? "active" : ""}" data-status="${value}">${label}</button>`).join("")}
+          <select id="courseFilter">
+            <option value="all">全部课程</option>
+            ${state.courses.map((item) => `<option value="${escapeHtml(item)}" ${state.course === item ? "selected" : ""}>${escapeHtml(item)}</option>`).join("")}
+          </select>
+          ${state.user.role === "admin" ? `<button class="btn primary" data-action="new-assignment">${icons.add} 新建作业</button>` : ""}
+        </div>
+      `;
+    }
+
+    function renderOverview() {
+      const upcoming = [...state.assignments].slice(0, 5);
+      const recent = [...state.notifications].slice(0, 4);
+      els.content.innerHTML = `
+        <section class="section">
+          <div class="section-head">
+            <h2>总览</h2>
+            <div class="controls"><button class="btn ghost" data-action="refresh">${icons.refresh} 刷新</button></div>
+          </div>
+          <div class="section-body stack">
+            <div class="stats">
+              <div class="stat"><div class="k">待提交</div><div class="v">${state.dashboard?.todo ?? 0}</div><div class="s">当前未完成作业</div></div>
+              <div class="stat"><div class="k">已提交</div><div class="v">${state.dashboard?.submitted ?? 0}</div><div class="s">等待批改或复核</div></div>
+              <div class="stat"><div class="k">平均成绩</div><div class="v">${state.dashboard?.avgScore ?? "--"}</div><div class="s">已批改作业统计</div></div>
+              <div class="stat"><div class="k">48 小时提醒</div><div class="v">${state.dashboard?.dueSoon ?? 0}</div><div class="s">即将截止的作业</div></div>
+            </div>
+            <div class="grid-2">
+              <div class="panel">
+                <div class="panel-head"><h3>近期作业</h3></div>
+                <div class="panel-body" style="padding:0;overflow:auto;max-height:560px">
+                  ${upcoming.length ? `
+                    <table>
+                      <thead><tr><th>作业</th><th>课程</th><th>截止</th><th>状态</th></tr></thead>
+                      <tbody>${upcoming.map(renderAssignmentRow).join("")}</tbody>
+                    </table>
+                  ` : `<div class="empty" style="margin:14px">暂无作业</div>`}
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3>最近通知</h3></div>
+                <div class="panel-body list">
+                  ${recent.length ? recent.map(renderNotificationItem).join("") : `<div class="empty">暂无通知</div>`}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    function renderAssignments() {
+      const item = activeAssignment();
+      els.content.innerHTML = `
+        <section class="section">
+          <div class="section-head">
+            <h2>作业管理</h2>
+            <div class="controls"><button class="btn ghost" data-action="refresh">${icons.refresh} 刷新</button></div>
+          </div>
+          <div class="section-body">
+            ${filtersMarkup()}
+            <div class="grid-2">
+              <div class="panel">
+                <div class="panel-head"><h3>作业列表</h3></div>
+                <div class="panel-body" style="padding:0;overflow:auto;max-height:640px">
+                  ${state.assignments.length ? `
+                    <table>
+                      <thead><tr><th>作业</th><th>课程</th><th>截止</th><th>状态</th><th>分值</th></tr></thead>
+                      <tbody>${state.assignments.map(renderAssignmentRow).join("")}</tbody>
+                    </table>
+                  ` : `<div class="empty" style="margin:14px">暂无匹配作业</div>`}
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3>${state.user.role === "admin" ? "编辑作业" : "作业详情"}</h3></div>
+                <div class="panel-body">${item ? renderAssignmentDetail(item) : `<div class="empty">请选择一条作业</div>`}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    function renderSubmissions() {
+      const item = activeAssignment();
+      els.content.innerHTML = `
+        <section class="section">
+          <div class="section-head">
+            <h2>批改中心</h2>
+            <div class="controls"><button class="btn ghost" data-action="refresh">${icons.refresh} 刷新</button></div>
+          </div>
+          <div class="section-body">
+            ${filtersMarkup()}
+            <div class="grid-2">
+              <div class="panel">
+                <div class="panel-head"><h3>提交列表</h3></div>
+                <div class="panel-body" style="padding:0;overflow:auto;max-height:640px">
+                  ${state.assignments.length ? `
+                    <table>
+                      <thead><tr><th>作业</th><th>课程</th><th>截止</th><th>状态</th></tr></thead>
+                      <tbody>${state.assignments.map(renderAssignmentRow).join("")}</tbody>
+                    </table>
+                  ` : `<div class="empty" style="margin:14px">暂无作业</div>`}
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3>提交详情</h3></div>
+                <div class="panel-body">${item ? renderSubmissionDetail(item) : `<div class="empty">请选择一条作业</div>`}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    function renderUsers() {
+      els.content.innerHTML = `
+        <section class="section">
+          <div class="section-head">
+            <h2>用户管理</h2>
+            <div class="controls"><button class="btn ghost" data-action="refresh">${icons.refresh} 刷新</button></div>
+          </div>
+          <div class="section-body">
+            <div class="grid-2">
+              <div class="panel">
+                <div class="panel-head"><h3>用户列表</h3></div>
+                <div class="panel-body" style="padding:0;overflow:auto;max-height:640px">
+                  ${state.users.length ? `
+                    <table>
+                      <thead><tr><th>用户名</th><th>角色</th><th>姓名</th><th>班级</th></tr></thead>
+                      <tbody>${state.users.map((user) => `
+                        <tr>
+                          <td data-label="用户名">${escapeHtml(user.username)}</td>
+                          <td data-label="角色"><span class="tag ${user.role === "admin" ? "graded" : "submitted"}">${user.role === "admin" ? "管理员" : "学生"}</span></td>
+                          <td data-label="姓名">${escapeHtml(user.displayName)}</td>
+                          <td data-label="班级">${escapeHtml(user.className)}</td>
+                        </tr>
+                      `).join("")}</tbody>
+                    </table>
+                  ` : `<div class="empty" style="margin:14px">暂无用户</div>`}
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3>新增用户</h3></div>
+                <div class="panel-body">
+                  <form id="userForm" class="stack">
+                    <div class="field"><label>用户名</label><input name="username" /></div>
+                    <div class="field"><label>密码</label><input name="password" type="password" /></div>
+                    <div class="field"><label>姓名</label><input name="displayName" /></div>
+                    <div class="field"><label>班级</label><input name="className" /></div>
+                    <div class="field"><label>角色</label><select name="role"><option value="student">学生</option><option value="admin">管理员</option></select></div>
+                    <button class="btn primary" type="submit">创建用户</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    function renderNotifications() {
+      els.content.innerHTML = `
+        <section class="section">
+          <div class="section-head">
+            <h2>通知中心</h2>
+            <div class="controls"><button class="btn ghost" data-action="refresh">${icons.refresh} 刷新</button></div>
+          </div>
+          <div class="section-body">
+            <div class="grid-2">
+              <div class="panel">
+                <div class="panel-head"><h3>通知列表</h3></div>
+                <div class="panel-body">
+                  <div class="list">
+                    ${state.notifications.length ? state.notifications.map(renderNotificationItem).join("") : `<div class="empty">暂无通知</div>`}
+                  </div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3>${state.user.role === "admin" ? "发布通知" : "已读管理"}</h3></div>
+                <div class="panel-body">
+                  ${state.user.role === "admin" ? `
+                    <form id="notifyForm" class="stack">
+                      <div class="field"><label>标题</label><input name="title" /></div>
+                      <div class="field"><label>内容</label><textarea name="body"></textarea></div>
+                      <div class="field"><label>目标角色</label><select name="targetRole"><option value="all">全部</option><option value="admin">管理员</option><option value="student">学生</option></select></div>
+                      <button class="btn primary" type="submit">发布通知</button>
+                    </form>
+                  ` : `<div class="empty">学生端仅查看通知，不支持发布。</div>`}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderAssignmentRow(item) {
+      const selected = item.id === state.selectedAssignmentId ? "selected" : "";
+      return `
+        <tr class="${selected}" data-assignment-id="${item.id}">
+          <td data-label="作业">
+            <div style="font-weight:600">${escapeHtml(item.title)}</div>
+            <div style="color:var(--muted);font-size:12px;margin-top:4px">${escapeHtml(item.priority)} 优先级</div>
+          </td>
+          <td data-label="课程">${escapeHtml(item.course)}</td>
+          <td data-label="截止">${fmtDate(item.dueDate)}</td>
+          <td data-label="状态"><span class="tag ${statusClass(item.status)}">${statusText(item.status)}</span></td>
+          <td data-label="分值">${item.points}</td>
+        </tr>
+      `;
+    }
+    function renderAssignmentDetail(item) {
+      const isAdmin = state.user.role === "admin";
+      const isDraft = !item.id;
+      const assignmentForm = `
+        <form id="assignmentForm" class="stack">
+          <div class="field"><label>标题</label><input name="title" value="${escapeHtml(item.title)}" /></div>
+          <div class="field"><label>课程</label><input name="course" value="${escapeHtml(item.course)}" /></div>
+          <div class="field"><label>截止时间</label><input name="dueDate" type="datetime-local" value="${toLocalInput(item.dueDate)}" /></div>
+          <div class="field"><label>分值</label><input name="points" type="number" value="${item.points}" min="1" /></div>
+          <div class="field"><label>优先级</label><select name="priority">${["高","中","低"].map((v) => `<option value="${v}" ${item.priority === v ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+          <div class="field"><label>描述</label><textarea name="description">${escapeHtml(item.description)}</textarea></div>
+          <div class="controls" style="justify-content:flex-start">
+            <button class="btn primary" type="submit">保存作业</button>
+            ${isDraft ? "" : `<button class="btn secondary" type="button" data-action="delete-assignment">删除</button>`}
+            <button class="btn ghost" type="button" data-action="new-assignment">新建作业</button>
+          </div>
+        </form>
+      `;
+      const studentSubmission = `
+        <div class="stack">
+          <div class="meta">
+            <div><span>截止时间</span><strong>${fmtDate(item.dueDate)}</strong></div>
+            <div><span>总分</span><strong>${item.points} 分</strong></div>
+            <div><span>状态</span><strong><span class="tag ${statusClass(item.status)}">${statusText(item.status)}</span></strong></div>
+            <div><span>课程</span><strong>${escapeHtml(item.course)}</strong></div>
+          </div>
+          <div class="desc">${escapeHtml(item.description)}</div>
+          ${item.answerText || item.attachmentName ? `
+            <div class="desc">
+              <strong style="display:block;margin-bottom:6px">当前提交</strong>
+              <div>${escapeHtml(item.answerText || "附件提交")}</div>
+              ${item.attachmentPath ? `<div style="margin-top:8px"><a href="/api/download?file=${encodeURIComponent(item.attachmentPath)}">下载附件：${escapeHtml(item.attachmentName || "附件")}</a></div>` : ""}
+            </div>
+          ` : ""}
+          ${item.feedback ? `<div class="desc"><strong style="display:block;margin-bottom:6px">教师反馈</strong>${escapeHtml(item.feedback)}</div>` : ""}
+          <form id="submissionForm" class="stack">
+            <div class="field"><label>答案内容</label><textarea name="answerText" placeholder="输入答案说明或提交备注"></textarea></div>
+            <div class="field"><label>附件</label><input name="attachment" type="file" /></div>
+            <button class="btn primary" type="submit">提交作业</button>
+          </form>
+        </div>
+      `;
+      return `
+        <div class="stack">
+          <div class="meta">
+            <div><span>截止时间</span><strong>${fmtDate(item.dueDate)}</strong></div>
+            <div><span>总分</span><strong>${item.points} 分</strong></div>
+            <div><span>状态</span><strong><span class="tag ${statusClass(item.status)}">${statusText(item.status)}</span></strong></div>
+            <div><span>课程</span><strong>${escapeHtml(item.course)}</strong></div>
+          </div>
+          <div class="desc">${escapeHtml(item.description)}</div>
+          ${isAdmin ? `
+            ${assignmentForm}
+            ${isDraft ? `<div class="empty">保存后可查看该作业的学生提交。</div>` : `<div class="panel" style="box-shadow:none"><div class="panel-head"><h3>学生提交</h3></div><div class="panel-body" id="submissionPreview"><div class="empty">正在加载提交列表...</div></div></div>`}
+          ` : studentSubmission}
+        </div>
+      `;
+    }
+    function renderSubmissionDetail(item) {
+      if (!item) return `<div class="empty">请选择一条作业</div>`;
+      const rows = state.submissions;
+      return `
+        <div class="stack">
+          <div class="meta">
+            <div><span>截止时间</span><strong>${fmtDate(item.dueDate)}</strong></div>
+            <div><span>总分</span><strong>${item.points} 分</strong></div>
+            <div><span>状态</span><strong><span class="tag ${statusClass(item.status)}">${statusText(item.status)}</span></strong></div>
+            <div><span>课程</span><strong>${escapeHtml(item.course)}</strong></div>
+          </div>
+          <div class="desc">${escapeHtml(item.description)}</div>
+          ${rows.length ? `
+            <div class="list">
+              ${rows.map((row) => `
+                <div class="list-item">
+                  <div class="row">
+                    <div>
+                      <strong>${escapeHtml(row.studentName)}</strong>
+                      <p>${escapeHtml(row.studentUsername)} · ${escapeHtml(row.studentClass || "未填写班级")}</p>
+                    </div>
+                    <span class="tag ${statusClass(row.status)}">${statusText(row.status)}</span>
+                  </div>
+                  <p>提交时间：${fmtDate(row.submittedAt)}</p>
+                  <p>${escapeHtml(row.answerText || "仅附件提交")}</p>
+                  ${row.attachmentPath ? `<p><a href="/api/download?file=${encodeURIComponent(row.attachmentPath)}">下载附件：${escapeHtml(row.attachmentName || "附件")}</a></p>` : ""}
+                  <form class="stack" data-grade-form="${row.id}" style="margin-top:10px">
+                    <div class="field"><label>分数</label><input name="score" type="number" min="0" max="${item.points}" value="${row.score ?? ""}" /></div>
+                    <div class="field"><label>反馈</label><textarea name="feedback">${escapeHtml(row.feedback || "")}</textarea></div>
+                    <button class="btn primary" type="submit">保存批改</button>
+                  </form>
+                </div>
+              `).join("")}
+            </div>
+          ` : `<div class="empty">暂无提交</div>`}
+        </div>
+      `;
+    }
+    function renderNotificationItem(item) {
+      return `
+        <div class="list-item">
+          <div class="row">
+            <div>
+              <strong>${escapeHtml(item.title)}</strong>
+              <p>${escapeHtml(item.body)}</p>
+            </div>
+            <span class="tag graded">${item.targetRole === "all" ? "全部" : item.targetRole === "admin" ? "管理员" : "学生"}</span>
+          </div>
+          <p>${escapeHtml(item.creatorName)} · ${escapeHtml(item.createdAtLabel || fmtDate(item.createdAt))}</p>
+          ${state.user ? `<button class="btn secondary" data-action="read-notification" data-id="${item.id}">标记已读</button>` : ""}
+        </div>
+      `;
+    }
+
+    async function submitLogin(event) {
+      event.preventDefault();
+      try {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        const data = await api("/api/login", { method:"POST", body: JSON.stringify({ username, password }) });
+        state.user = data.user;
+        state.activeTab = "overview";
+        state.selectedAssignmentId = null;
+        state.assignmentDraft = null;
+        showApp();
+        await loadAll();
+        toast("登录成功");
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+    async function handleLogout() {
+      try { await api("/api/logout", { method:"POST" }); } finally {
+        state.user = null;
+        state.activeTab = "overview";
+        state.assignments = [];
+        state.notifications = [];
+        state.users = [];
+        state.submissions = [];
+        state.selectedAssignmentId = null;
+        state.assignmentDraft = null;
+        showLogin();
+      }
+    }
+    async function refreshData() {
+      try { await loadAll(); toast("已刷新"); } catch (error) { toast(error.message); }
+    }
+    function createNewAssignment() {
+      state.selectedAssignmentId = null;
+      state.assignmentDraft = { id:null, title:"", course:"", dueDate:"", points:100, priority:"中", description:"" };
+      render();
+    }
+    async function deleteAssignment() {
+      const item = activeAssignment();
+      if (!item || !item.id) return;
+      if (!confirm(`删除作业「${item.title}」？`)) return;
+      try {
+        await api(`/api/assignments/${item.id}`, { method:"DELETE" });
+        state.selectedAssignmentId = null;
+        state.assignmentDraft = null;
+        await refreshData();
+        toast("已删除");
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+    async function submitAssignmentForm(form) {
+      const item = activeAssignment();
+      const body = {
+        title: form.title.value.trim(),
+        course: form.course.value.trim(),
+        dueDate: form.dueDate.value,
+        points: Number(form.points.value || 100),
+        priority: form.priority.value,
+        description: form.description.value.trim()
+      };
+      try {
+        if (item && item.id) {
+          await api(`/api/assignments/${item.id}`, { method:"PATCH", body: JSON.stringify(body) });
+          toast("作业已保存");
+        } else {
+          const data = await api("/api/assignments", { method:"POST", body: JSON.stringify(body) });
+          state.selectedAssignmentId = data.id;
+          state.assignmentDraft = null;
+          toast("作业已创建");
+        }
+        await refreshData();
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+    async function submitStudentSubmission(form) {
+      const item = activeAssignment();
+      if (!item || !item.id) return;
+      try {
+        const fd = new FormData();
+        fd.append("assignmentId", item.id);
+        fd.append("answerText", form.answerText.value.trim());
+        const file = form.attachment.files[0];
+        if (file) fd.append("attachment", file);
+        await api("/api/submissions", { method:"POST", body: fd });
+        await refreshData();
+        toast("已提交");
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+    async function loadSubmissionsToPreview() {
+      const preview = document.getElementById("submissionPreview");
+      if (!preview) return;
+      const item = activeAssignment();
+      if (!item || !item.id) {
+        preview.innerHTML = `<div class="empty">暂无提交</div>`;
+        return;
+      }
+      const data = await api(`/api/assignments/${item.id}/submissions`);
+      state.submissions = data.items;
+      preview.innerHTML = state.submissions.length ? `
+        <div class="list">
+          ${state.submissions.map((row) => `
+            <div class="list-item">
+              <div class="row">
+                <div>
+                  <strong>${escapeHtml(row.studentName)}</strong>
+                  <p>${escapeHtml(row.studentUsername)} · ${escapeHtml(row.studentClass || "未填写班级")}</p>
+                </div>
+                <span class="tag ${statusClass(row.status)}">${statusText(row.status)}</span>
+              </div>
+              <p>提交时间：${fmtDate(row.submittedAt)}</p>
+              <p>${escapeHtml(row.answerText || "仅附件提交")}</p>
+              ${row.attachmentPath ? `<p><a href="/api/download?file=${encodeURIComponent(row.attachmentPath)}">下载附件：${escapeHtml(row.attachmentName || "附件")}</a></p>` : ""}
+              <form class="stack" data-grade-form="${row.id}" style="margin-top:10px">
+                <div class="field"><label>分数</label><input name="score" type="number" min="0" max="${item.points}" value="${row.score ?? ""}" /></div>
+                <div class="field"><label>反馈</label><textarea name="feedback">${escapeHtml(row.feedback || "")}</textarea></div>
+                <button class="btn primary" type="submit">保存批改</button>
+              </form>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<div class="empty">暂无提交</div>`;
+    }
+    async function gradeSubmission(form, submissionId) {
+      try {
+        await api(`/api/submissions/${submissionId}/grade`, {
+          method:"POST",
+          body: JSON.stringify({
+            score: form.score.value === "" ? null : Number(form.score.value),
+            feedback: form.feedback.value.trim()
+          })
+        });
+        await loadSubmissionsToPreview();
+        toast("批改已保存");
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+    async function submitUserForm(form) {
+      try {
+        await api("/api/users", {
+          method:"POST",
+          body: JSON.stringify({
+            username: form.username.value.trim(),
+            password: form.password.value,
+            displayName: form.displayName.value.trim(),
+            className: form.className.value.trim(),
+            role: form.role.value
+          })
+        });
+        await loadUsers();
+        render();
+        toast("用户已创建");
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+    async function submitNotificationForm(form) {
+      try {
+        await api("/api/notifications", {
+          method:"POST",
+          body: JSON.stringify({
+            title: form.title.value.trim(),
+            body: form.body.value.trim(),
+            targetRole: form.targetRole.value
+          })
+        });
+        await refreshData();
+        toast("通知已发布");
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+    async function markNotificationRead(id) {
+      try {
+        await api("/api/notifications/read", { method:"POST", body: JSON.stringify({ notificationId: Number(id) }) });
+        toast("已标记");
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+
+    document.addEventListener("click", async (event) => {
+      const tabBtn = event.target.closest("[data-tab]");
+      if (tabBtn) {
+        state.activeTab = tabBtn.dataset.tab;
+        render();
+        if (state.activeTab === "submissions" && state.user.role === "admin") await loadSubmissionsToPreview();
+        if (state.activeTab === "users" && state.user.role === "admin") await loadUsers();
+        return;
+      }
+      const statusBtn = event.target.closest("[data-status]");
+      if (statusBtn) {
+        state.status = statusBtn.dataset.status;
+        await refreshData();
+        return;
+      }
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      if (action === "refresh") return refreshData();
+      if (action === "new-assignment") return createNewAssignment();
+      if (action === "delete-assignment") return deleteAssignment();
+      if (action === "read-notification") return markNotificationRead(event.target.closest("[data-action]").dataset.id);
+      const row = event.target.closest("[data-assignment-id]");
+      if (row) {
+        state.selectedAssignmentId = Number(row.dataset.assignmentId);
+        state.assignmentDraft = null;
+        render();
+        if (state.activeTab === "submissions" && state.user.role === "admin") await loadSubmissionsToPreview();
+        return;
+      }
+    });
+    document.addEventListener("change", (event) => {
+      if (event.target.id === "courseFilter") {
+        state.course = event.target.value;
+        refreshData();
+      }
+    });
+    document.addEventListener("submit", async (event) => {
+      const form = event.target;
+      if (form.id === "assignmentForm") { event.preventDefault(); return submitAssignmentForm(form); }
+      if (form.id === "submissionForm") { event.preventDefault(); return submitStudentSubmission(form); }
+      if (form.id === "userForm") { event.preventDefault(); return submitUserForm(form); }
+      if (form.id === "notifyForm") { event.preventDefault(); return submitNotificationForm(form); }
+      const gradeForm = form.closest("[data-grade-form]");
+      if (gradeForm) { event.preventDefault(); return gradeSubmission(form, Number(gradeForm.dataset.gradeForm)); }
+    });
+    els.loginForm.addEventListener("submit", submitLogin);
+    els.logoutBtn.addEventListener("click", handleLogout);
+    els.searchInput.addEventListener("input", (event) => {
+      state.query = event.target.value.trim();
+      refreshData();
+    });
+
+    loadSession();
+    renderDate();
+    setInterval(refreshDateIfNeeded, 60000);
+  </script>
+</body>
+</html>
